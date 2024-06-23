@@ -12,8 +12,8 @@ import (
 
 func (apicfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		FirstName string `json:"firstName"`
-		LastName string `json:"lastName"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
 	}
 	decoder := json.NewDecoder(r.Body)
 
@@ -23,10 +23,10 @@ func (apicfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		respondWithError(w, 400, fmt.Sprintf("Failed to decode JSON: %v", err))
 	}
 
-	user,error := apicfg.db.CreateUser(r.Context(), database.CreateUserParams{
-		ID: uuid.New(),
+	user, error := apicfg.db.CreateUser(r.Context(), database.CreateUserParams{
+		ID:        uuid.New(),
 		FirstName: params.FirstName,
-		LastName: params.LastName,
+		LastName:  params.LastName,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	})
@@ -35,7 +35,10 @@ func (apicfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		respondWithError(w, 500, fmt.Sprintf("Failed to create user: %v", error))
 		return
 	}
+	respondWithJson(w, 200, databaseUserToUser(user))
+}
 
-
-	respondWithJson(w, 200, user)
+func (apicfg *apiConfig) handlerGetUserByApiKey(w http.ResponseWriter, r *http.Request, user database.User) {
+	
+	respondWithJson(w, 200, databaseUserToUser(user))
 }

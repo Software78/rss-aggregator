@@ -28,27 +28,25 @@ func main() {
 	if dbUrl == "" {
 		log.Fatal("DB_URL environment variable not set")
 	}
-	
-	conn,err := sql.Open("postgres", dbUrl)
+
+	conn, err := sql.Open("postgres", dbUrl)
 	if err != nil {
 		log.Fatal("Error connecting to databse", err)
 	}
-	
+
 	apicfg := apiConfig{
 		db: database.New(conn),
 	}
 
-	
-
 	router := chi.NewRouter()
 	router.Use(
 		cors.Handler(cors.Options{
-			AllowedOrigins: []string{"https://*", "http://*"},
-			AllowedMethods: []string{"GET", "POST"},
-			AllowedHeaders: []string{"*"},
-			ExposedHeaders: []string{"Link"},
+			AllowedOrigins:   []string{"https://*", "http://*"},
+			AllowedMethods:   []string{"GET", "POST"},
+			AllowedHeaders:   []string{"*"},
+			ExposedHeaders:   []string{"Link"},
 			AllowCredentials: false,
-			MaxAge: 300,
+			MaxAge:           300,
 		}),
 	)
 
@@ -56,6 +54,8 @@ func main() {
 	v1Router.Get("/ready", handlerReadiness)
 	v1Router.Get("/error", handlerError)
 	v1Router.Post("/users", apicfg.handlerCreateUser)
+	v1Router.Get("/users/me", apicfg.middlewareAuth(apicfg.handlerGetUserByApiKey))
+	v1Router.Post("/feeds", apicfg.middlewareAuth(apicfg.handlerCreateFeed))
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
 		Handler: router,
